@@ -1,0 +1,14 @@
+﻿global using Api;
+global using Application.Common.Interfaces;
+global using Common.TestSetup;
+global using Domain.Entities;
+global using FluentAssertions;
+global using Infrastructure.Persistence;
+global using Infrastructure.Services;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.DependencyInjection;
+global using Moq;
+global using System;
+global using System.Threading.Tasks;
+global using Xunit;

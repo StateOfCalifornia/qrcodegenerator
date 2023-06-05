@@ -1,0 +1,101 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- Testing
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+# For ASP.NET Core, must first install the .Net
+# Core framework that matches the project.
+# Also, must install SDK package type.
+# Make sure the .Net Core version tracks with what the project is built it!
+- task: UseDotNet@2
+  displayName: 'Use .Net Core sdk 6.x'
+  inputs:
+    packageType: 'sdk'
+    version: 6.x
+    includePreviewVersions: true
+# Now, make sure you are using a new version
+# of Nuget. Here, NuGet 5.3 is required 
+# when using .Net Core SDK 3.0.x
+- task: NuGetToolInstaller@0
+  displayName: 'Use NuGet 6.0'
+  inputs:
+    versionSpec: 6.0
+
+# IMPORTANT!
+# Must swap out the standard, .Net "restore" command
+# with the dot net core command "dotnet restore" as
+# shown here. Reason is that this restores the NuGet
+# packages in a way that .Net Core expects.
+#
+# Also, note the "externalFeedCredentials" below.
+# This project uses "Telerik" NugetPackages, which
+# are private and require authentication.
+# See: https://www.telerik.com/blogs/azure-devops-and-telerik-nuget-packages
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet restore'
+  inputs:
+    command: restore
+    projects: '**/*.csproj'
+
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Build .NET 6 Application'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Install ReportGenerator'
+  inputs:
+    command: custom
+    custom: tool
+    arguments: 'install --global dotnet-reportgenerator-globaltool'
+
+- task: DotNetCoreCLI@2
+  displayName: Test
+  inputs:
+    command: test
+    projects: '**/*[Tt]ests/*.csproj'
+    arguments: '--configuration $(BuildConfiguration) --collect "XPlat Code coverage" -- RunConfiguration.DisableAppDomain=true'
+    publishTestResults: true
+
+- script: 'reportgenerator -reports:$(Agent.TempDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/coverlet/reports -reporttypes:"Cobertura"'
+  displayName: 'Create code coverage report'
+
+- task: PublishCodeCoverageResults@1
+  displayName: Publish Code Coverage Results
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: '$(Build.SourcesDirectory)/coverlet/reports/Cobertura.xml' 
+   
+
+- task: PublishSymbols@2
+  displayName: 'Publish symbols path'
+  inputs:
+    SearchPattern: '**\bin\**\*.pdb'
+    PublishSymbols: false
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'General publish'
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+    arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+    zipAfterPublish: false
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish db Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+    ArtifactName: 'drop'
+  condition: succeededOrFailed()
+

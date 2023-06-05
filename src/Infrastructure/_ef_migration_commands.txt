@@ -1,0 +1,34 @@
+﻿EF Core 'Package Manager Console' Tools
+Ref Url: https://docs.microsoft.com/en-us/ef/core/miscellaneous/cli/powershell
+
+------------------------------------------------------------------------------------------
+Scaffold a Schema from an already created database.
+This will allow EF to reverse engineer an existing database though that afterwards you can
+pick apart and put in the respective layers/projects
+------------------------------------------------------------------------------------------
+Scaffold-DbContext -Connection "Server=localhost;Database=NewNorthwindContext;Trusted_Connection=True;MultipleActiveResultSets=true" -OutputDir _tempScaffold -Provider Microsoft.EntityFrameworkCore.SqlServer -Context ScaffoldContext
+
+------------------------------------------------------------------------------------------
+Add a Migration (*)
+This allows you to capture a db change of some sort.
+------------------------------------------------------------------------------------------
+//NorthwindContext, we use the default and force an Output directory of 'Persistence/Migrations' folder
+add-migration <name of migration without angle brackets> -Context NorthwindContext -OutputDir Persistence/Migrations
+
+------------------------------------------------------------------------------------------
+Update Database : In lieu of scripting database, automatically update 
+connectionString configured database.
+------------------------------------------------------------------------------------------
+update-database -Context NorthwindContext
+
+------------------------------------------------------------------------------------------
+Script Database : This creates an SQL script to run in SSMS. (*)
+------------------------------------------------------------------------------------------
+script-migration -Context NorthwindContext
+
+
+------------------------------------------------------------------------------------------
+(*) : Note
+------------------------------------------------------------------------------------------
+When scripting, set the default project to 'Api' (if not already done so) , or else you will get the following error......
+'Unable to create an object of type 'NorthwindContext'. Add an implementation of 'IdesignTimeDbContextFactory<NorthwindContext>' to the project, or see https://go.microsoft.com/fwlink/?linkid=851728 for additional patterns supported at design time.'

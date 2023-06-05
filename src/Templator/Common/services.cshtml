@@ -1,0 +1,27 @@
+﻿@using Microsoft.Extensions.DependencyInjection
+@model IServiceCollection
+@{
+    ViewBag.Title = "Registered Services";
+}
+<h1>@ViewBag.Title</h1>
+
+<table class="table table-hover table-condensed table-responsive">
+    <caption>Api Services</caption>
+    <thead>
+        <tr>
+            <th class="col-1" scope="col">Lifetime</th>
+            <th class="col-7" scope="col">Type</th>
+            <th class="col-4" scope="col">Instance</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var service in Model.OrderBy(x => x.ServiceType.FullName))
+        {
+        <tr>
+            <td class="col-1">@service.Lifetime</td>
+            <td class="col-7">@service.ServiceType.FullName</td>
+            <td class="col-4">@service.ImplementationType?.FullName</td>
+        </tr>
+        }
+    </tbody>
+</table>
