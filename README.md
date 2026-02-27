@@ -1,4 +1,4 @@
-TODO : Generate Opening template paragraph
+This QR Code generator API was provided as a proof-of-concept for sharing an open source solution to create QR codes on a website.
 
 ## Technologies
 
